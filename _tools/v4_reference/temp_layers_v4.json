@@ -1,0 +1,1094 @@
+[
+ {
+  "id": "card_r1c1",
+  "kind": "card",
+  "element_repair_mode": "image",
+  "z_order": 1,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   69,
+   639,
+   355,
+   860
+  ],
+  "area": 57559
+ },
+ {
+  "id": "name_pill_r1c1",
+  "kind": "badge",
+  "element_repair_mode": "surface",
+  "z_order": 2,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   119,
+   878,
+   285,
+   917
+  ],
+  "area": 5194
+ },
+ {
+  "id": "prog_pill_r1c1",
+  "kind": "progress",
+  "element_repair_mode": "surface",
+  "z_order": 2,
+  "parent_query_id": null,
+  "occluded_by": [
+   "coin_r1c1"
+  ],
+  "needs_repair": true,
+  "bbox": [
+   109,
+   939,
+   315,
+   995
+  ],
+  "area": 7931
+ },
+ {
+  "id": "coin_r1c1",
+  "kind": "icon",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "prog_pill_r1c1",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   296,
+   944,
+   351,
+   994
+  ],
+  "area": 2510
+ },
+ {
+  "id": "card_r1c2",
+  "kind": "card",
+  "element_repair_mode": "image",
+  "z_order": 1,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   397,
+   639,
+   685,
+   860
+  ],
+  "area": 57738
+ },
+ {
+  "id": "name_pill_r1c2",
+  "kind": "badge",
+  "element_repair_mode": "surface",
+  "z_order": 2,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   453,
+   878,
+   615,
+   917
+  ],
+  "area": 6452
+ },
+ {
+  "id": "prog_pill_r1c2",
+  "kind": "progress",
+  "element_repair_mode": "surface",
+  "z_order": 2,
+  "parent_query_id": null,
+  "occluded_by": [
+   "coin_r1c2"
+  ],
+  "needs_repair": true,
+  "bbox": [
+   444,
+   939,
+   645,
+   995
+  ],
+  "area": 7811
+ },
+ {
+  "id": "coin_r1c2",
+  "kind": "icon",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "prog_pill_r1c2",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   626,
+   944,
+   680,
+   994
+  ],
+  "area": 2428
+ },
+ {
+  "id": "card_r1c3",
+  "kind": "card",
+  "element_repair_mode": "image",
+  "z_order": 1,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   726,
+   640,
+   1012,
+   860
+  ],
+  "area": 56851
+ },
+ {
+  "id": "name_pill_r1c3",
+  "kind": "badge",
+  "element_repair_mode": "surface",
+  "z_order": 2,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   780,
+   878,
+   945,
+   917
+  ],
+  "area": 4297
+ },
+ {
+  "id": "prog_pill_r1c3",
+  "kind": "progress",
+  "element_repair_mode": "surface",
+  "z_order": 2,
+  "parent_query_id": null,
+  "occluded_by": [
+   "coin_r1c3"
+  ],
+  "needs_repair": true,
+  "bbox": [
+   771,
+   939,
+   975,
+   995
+  ],
+  "area": 7973
+ },
+ {
+  "id": "coin_r1c3",
+  "kind": "icon",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "prog_pill_r1c3",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   956,
+   944,
+   1007,
+   994
+  ],
+  "area": 2338
+ },
+ {
+  "id": "card_r2c1",
+  "kind": "card",
+  "element_repair_mode": "image",
+  "z_order": 1,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   70,
+   1074,
+   354,
+   1295
+  ],
+  "area": 56092
+ },
+ {
+  "id": "name_pill_r2c1",
+  "kind": "badge",
+  "element_repair_mode": "surface",
+  "z_order": 2,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   119,
+   1310,
+   285,
+   1350
+  ],
+  "area": 5730
+ },
+ {
+  "id": "prog_pill_r2c1",
+  "kind": "progress",
+  "element_repair_mode": "surface",
+  "z_order": 2,
+  "parent_query_id": null,
+  "occluded_by": [
+   "coin_r2c1"
+  ],
+  "needs_repair": true,
+  "bbox": [
+   109,
+   1376,
+   315,
+   1432
+  ],
+  "area": 8008
+ },
+ {
+  "id": "coin_r2c1",
+  "kind": "icon",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "prog_pill_r2c1",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   296,
+   1377,
+   351,
+   1431
+  ],
+  "area": 2693
+ },
+ {
+  "id": "card_r2c2",
+  "kind": "card",
+  "element_repair_mode": "image",
+  "z_order": 1,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   396,
+   1073,
+   685,
+   1295
+  ],
+  "area": 57504
+ },
+ {
+  "id": "name_pill_r2c2",
+  "kind": "badge",
+  "element_repair_mode": "surface",
+  "z_order": 2,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   453,
+   1310,
+   615,
+   1351
+  ],
+  "area": 6296
+ },
+ {
+  "id": "prog_pill_r2c2",
+  "kind": "progress",
+  "element_repair_mode": "surface",
+  "z_order": 2,
+  "parent_query_id": null,
+  "occluded_by": [
+   "coin_r2c2",
+   "mystery_r2c2"
+  ],
+  "needs_repair": true,
+  "bbox": [
+   444,
+   1376,
+   645,
+   1432
+  ],
+  "area": 8524
+ },
+ {
+  "id": "coin_r2c2",
+  "kind": "icon",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "prog_pill_r2c2",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   626,
+   1385,
+   678,
+   1431
+  ],
+  "area": 2041
+ },
+ {
+  "id": "card_r2c3",
+  "kind": "card",
+  "element_repair_mode": "image",
+  "z_order": 1,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   725,
+   1073,
+   1011,
+   1295
+  ],
+  "area": 57563
+ },
+ {
+  "id": "name_pill_r2c3",
+  "kind": "badge",
+  "element_repair_mode": "surface",
+  "z_order": 2,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   780,
+   1310,
+   945,
+   1350
+  ],
+  "area": 5723
+ },
+ {
+  "id": "prog_pill_r2c3",
+  "kind": "progress",
+  "element_repair_mode": "surface",
+  "z_order": 2,
+  "parent_query_id": null,
+  "occluded_by": [
+   "coin_r2c3"
+  ],
+  "needs_repair": true,
+  "bbox": [
+   771,
+   1376,
+   975,
+   1432
+  ],
+  "area": 8920
+ },
+ {
+  "id": "coin_r2c3",
+  "kind": "icon",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "prog_pill_r2c3",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   956,
+   1377,
+   1008,
+   1431
+  ],
+  "area": 2535
+ },
+ {
+  "id": "card_r3c1",
+  "kind": "card",
+  "element_repair_mode": "image",
+  "z_order": 1,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   70,
+   1506,
+   355,
+   1715
+  ],
+  "area": 55174
+ },
+ {
+  "id": "name_pill_r3c1",
+  "kind": "badge",
+  "element_repair_mode": "surface",
+  "z_order": 2,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   118,
+   1739,
+   285,
+   1772
+  ],
+  "area": 5546
+ },
+ {
+  "id": "prog_pill_r3c1",
+  "kind": "progress",
+  "element_repair_mode": "surface",
+  "z_order": 2,
+  "parent_query_id": null,
+  "occluded_by": [
+   "coin_r3c1"
+  ],
+  "needs_repair": true,
+  "bbox": [
+   109,
+   1804,
+   315,
+   1860
+  ],
+  "area": 7672
+ },
+ {
+  "id": "coin_r3c1",
+  "kind": "icon",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "prog_pill_r3c1",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   296,
+   1810,
+   351,
+   1859
+  ],
+  "area": 2459
+ },
+ {
+  "id": "card_r3c2",
+  "kind": "card",
+  "element_repair_mode": "image",
+  "z_order": 1,
+  "parent_query_id": null,
+  "occluded_by": [
+   "lock_r3c2",
+   "badge_r3c2"
+  ],
+  "needs_repair": true,
+  "bbox": [
+   396,
+   1504,
+   685,
+   1715
+  ],
+  "area": 56424
+ },
+ {
+  "id": "name_pill_r3c2",
+  "kind": "badge",
+  "element_repair_mode": "surface",
+  "z_order": 2,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   453,
+   1739,
+   615,
+   1772
+  ],
+  "area": 4292
+ },
+ {
+  "id": "prog_pill_r3c2",
+  "kind": "progress",
+  "element_repair_mode": "surface",
+  "z_order": 2,
+  "parent_query_id": null,
+  "occluded_by": [
+   "coin_r3c2"
+  ],
+  "needs_repair": true,
+  "bbox": [
+   444,
+   1804,
+   645,
+   1860
+  ],
+  "area": 7581
+ },
+ {
+  "id": "coin_r3c2",
+  "kind": "icon",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "prog_pill_r3c2",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   626,
+   1811,
+   680,
+   1859
+  ],
+  "area": 2376
+ },
+ {
+  "id": "card_r3c3",
+  "kind": "card",
+  "element_repair_mode": "image",
+  "z_order": 1,
+  "parent_query_id": null,
+  "occluded_by": [
+   "lock_r3c3",
+   "badge_r3c3"
+  ],
+  "needs_repair": true,
+  "bbox": [
+   725,
+   1505,
+   1015,
+   1715
+  ],
+  "area": 56504
+ },
+ {
+  "id": "name_pill_r3c3",
+  "kind": "badge",
+  "element_repair_mode": "surface",
+  "z_order": 2,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   780,
+   1740,
+   945,
+   1772
+  ],
+  "area": 4688
+ },
+ {
+  "id": "prog_pill_r3c3",
+  "kind": "progress",
+  "element_repair_mode": "surface",
+  "z_order": 2,
+  "parent_query_id": null,
+  "occluded_by": [
+   "coin_r3c3"
+  ],
+  "needs_repair": true,
+  "bbox": [
+   771,
+   1804,
+   975,
+   1860
+  ],
+  "area": 7722
+ },
+ {
+  "id": "coin_r3c3",
+  "kind": "icon",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "prog_pill_r3c3",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   956,
+   1810,
+   1007,
+   1859
+  ],
+  "area": 2266
+ },
+ {
+  "id": "card_r4c1",
+  "kind": "card",
+  "element_repair_mode": "image",
+  "z_order": 1,
+  "parent_query_id": null,
+  "occluded_by": [
+   "lock_r4c1",
+   "badge_r4c1"
+  ],
+  "needs_repair": true,
+  "bbox": [
+   68,
+   1939,
+   354,
+   2115
+  ],
+  "area": 46970
+ },
+ {
+  "id": "lock_r4c1",
+  "kind": "icon",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "card_r4c1",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   182,
+   2058,
+   238,
+   2107
+  ],
+  "area": 2372
+ },
+ {
+  "id": "badge_r4c1",
+  "kind": "badge",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "card_r4c1",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   183,
+   1990,
+   219,
+   2021
+  ],
+  "area": 1029
+ },
+ {
+  "id": "card_r4c2",
+  "kind": "card",
+  "element_repair_mode": "image",
+  "z_order": 1,
+  "parent_query_id": null,
+  "occluded_by": [
+   "lock_r4c2",
+   "badge_r4c2"
+  ],
+  "needs_repair": true,
+  "bbox": [
+   395,
+   1939,
+   683,
+   2115
+  ],
+  "area": 46835
+ },
+ {
+  "id": "lock_r4c2",
+  "kind": "icon",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "card_r4c2",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   509,
+   2057,
+   571,
+   2107
+  ],
+  "area": 2519
+ },
+ {
+  "id": "badge_r4c2",
+  "kind": "badge",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "card_r4c2",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   516,
+   1992,
+   546,
+   2021
+  ],
+  "area": 834
+ },
+ {
+  "id": "card_r4c3",
+  "kind": "card",
+  "element_repair_mode": "image",
+  "z_order": 1,
+  "parent_query_id": null,
+  "occluded_by": [
+   "lock_r4c3",
+   "badge_r4c3"
+  ],
+  "needs_repair": true,
+  "bbox": [
+   724,
+   1939,
+   1011,
+   2115
+  ],
+  "area": 47088
+ },
+ {
+  "id": "lock_r4c3",
+  "kind": "icon",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "card_r4c3",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   838,
+   2057,
+   899,
+   2107
+  ],
+  "area": 2507
+ },
+ {
+  "id": "badge_r4c3",
+  "kind": "badge",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "card_r4c3",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   844,
+   1991,
+   891,
+   2021
+  ],
+  "area": 1086
+ },
+ {
+  "id": "lock_r3c2",
+  "kind": "icon",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "card_r3c2",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   511,
+   1585,
+   571,
+   1667
+  ],
+  "area": 3979
+ },
+ {
+  "id": "badge_r3c2",
+  "kind": "badge",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "card_r3c2",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   516,
+   1537,
+   563,
+   1574
+  ],
+  "area": 1383
+ },
+ {
+  "id": "lock_r3c3",
+  "kind": "icon",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "card_r3c3",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   838,
+   1615,
+   899,
+   1667
+  ],
+  "area": 2154
+ },
+ {
+  "id": "badge_r3c3",
+  "kind": "badge",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "card_r3c3",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   844,
+   1539,
+   890,
+   1574
+  ],
+  "area": 1342
+ },
+ {
+  "id": "mystery_r2c2",
+  "kind": "icon",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": "prog_pill_r2c2",
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   620,
+   1384,
+   679,
+   1426
+  ],
+  "area": 2121
+ },
+ {
+  "id": "top_coin_pill",
+  "kind": "badge",
+  "element_repair_mode": "surface",
+  "z_order": 4,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   35,
+   113,
+   272,
+   190
+  ],
+  "area": 14926
+ },
+ {
+  "id": "help_button",
+  "kind": "button",
+  "element_repair_mode": "surface",
+  "z_order": 4,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   764,
+   109,
+   844,
+   190
+  ],
+  "area": 6522
+ },
+ {
+  "id": "gift_icon",
+  "kind": "icon",
+  "element_repair_mode": "none",
+  "z_order": 4,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   873,
+   161,
+   914,
+   203
+  ],
+  "area": 1646
+ },
+ {
+  "id": "minus_button",
+  "kind": "button",
+  "element_repair_mode": "surface",
+  "z_order": 4,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   973,
+   161,
+   1017,
+   203
+  ],
+  "area": 1761
+ },
+ {
+  "id": "mailbox_icon",
+  "kind": "icon",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   918,
+   218,
+   1015,
+   335
+  ],
+  "area": 10359
+ },
+ {
+  "id": "mailbox_label",
+  "kind": "badge",
+  "element_repair_mode": "surface",
+  "z_order": 3,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   918,
+   342,
+   1017,
+   372
+  ],
+  "area": 2647
+ },
+ {
+  "id": "giftbox_icon",
+  "kind": "icon",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   918,
+   424,
+   1044,
+   521
+  ],
+  "area": 9572
+ },
+ {
+  "id": "giftbox_label",
+  "kind": "badge",
+  "element_repair_mode": "surface",
+  "z_order": 3,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   918,
+   531,
+   1034,
+   563
+  ],
+  "area": 2535
+ },
+ {
+  "id": "bubble_who",
+  "kind": "decoration",
+  "element_repair_mode": "none",
+  "z_order": 3,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   33,
+   415,
+   181,
+   526
+  ],
+  "area": 14866
+ },
+ {
+  "id": "watermark_art",
+  "kind": "decoration",
+  "element_repair_mode": "none",
+  "z_order": 0,
+  "parent_query_id": null,
+  "occluded_by": [
+   "mascot"
+  ],
+  "needs_repair": false,
+  "bbox": [
+   70,
+   241,
+   433,
+   399
+  ],
+  "area": 38947
+ },
+ {
+  "id": "title_art",
+  "kind": "logo",
+  "element_repair_mode": "none",
+  "z_order": 4,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   236,
+   436,
+   844,
+   544
+  ],
+  "area": 63644
+ },
+ {
+  "id": "mascot",
+  "kind": "illustration",
+  "element_repair_mode": "none",
+  "z_order": 5,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   300,
+   81,
+   737,
+   426
+  ],
+  "area": 111385
+ },
+ {
+  "id": "big_button",
+  "kind": "button",
+  "element_repair_mode": "surface",
+  "z_order": 4,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   264,
+   2151,
+   844,
+   2344
+  ],
+  "area": 110936
+ },
+ {
+  "id": "back_button",
+  "kind": "button",
+  "element_repair_mode": "surface",
+  "z_order": 4,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   46,
+   2173,
+   217,
+   2326
+  ],
+  "area": 25344
+ },
+ {
+  "id": "shop_icon",
+  "kind": "icon",
+  "element_repair_mode": "none",
+  "z_order": 4,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   904,
+   2182,
+   1043,
+   2312
+  ],
+  "area": 15159
+ },
+ {
+  "id": "shop_label",
+  "kind": "badge",
+  "element_repair_mode": "surface",
+  "z_order": 4,
+  "parent_query_id": null,
+  "occluded_by": [],
+  "needs_repair": false,
+  "bbox": [
+   895,
+   2315,
+   1039,
+   2344
+  ],
+  "area": 3424
+ }
+]
