@@ -112,7 +112,8 @@ BG_MAX_BLACK = 0.02          # sanity gate: black pixels inside the hole
 GEN_MIN_STD = 6.0            # ...unless the hole has real texture (dark material)
 ATLAS_MAX_COLOR_DELTA = 90.0 # max median-colour distance hole vs own material
 ATLAS_MAX_BLACK = 0.02
-ATLAS_MAX_SIDE = 1024
+ATLAS_MAX_SIDE = 2048        # ISS-035: one atlas for the whole example (article shape);
+                             # Seedream's >=3.6864Mpx floor favours a big single atlas
 ATLAS_PAD = 8
 ATLAS_FILL_BUDGET = 1.6      # total cell area per atlas, as a fraction of max_side^2
 GEN_SEEDS = (11, 12, 13)
@@ -154,6 +155,65 @@ def jdump(obj, path):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(obj, f, ensure_ascii=False, indent=1, default=str)
     return path
+
+
+# ============ Volcengine Ark / Seedream (ISS-035) ============
+# docs.volcengine.com/docs/82379/1541523 + /82379/2582775 (fetched 2026-09-14):
+#   POST {base}/images/generations, Bearer key; body = model, prompt, image (URL or
+#   data:image/png;base64,...), size "<W>x<H>", watermark, output_format,
+#   response_format.  No mask parameter.  Measured limits: size total pixels must be
+#   >= 3686400 (else 400); a no-size call returns the model's own bucket (2048x2048,
+#   1824x2224, ...) never the input size; a 3162x1167 request was accepted but the
+#   model no-opped (holes untouched) while 2306x1599 / 2236x1650 filled correctly.
+SEEDREAM_BASE_URL = "https://ark.cn-beijing.volces.com/api/plan/v3"
+SEEDREAM_MODEL = "doubao-seedream-5.0-pro"
+SEEDREAM_MIN_PIXELS = 3686400
+SEEDREAM_MAX_SIDE = 2800     # empirical guard; 1536x2752 background sits just under it
+SEEDREAM_ATTEMPTS = 2        # pro was once flaky (94.75% black on a retry-able call)
+SEEDREAM_TIMEOUT = 240       # seconds per call; probes took 25-70 s
+GEN_PROVIDER_DEFAULT = "seedream"
+
+# ============ Aliyun DashScope wanx2.1-imageedit (experimental provider) ============
+# description_edit_with_mask: base image + a mask that is pure white [255,255,255] on
+# the hole and pure black [0,0,0] elsewhere, both at the same resolution, every side in
+# [512, 4096] and <= 10 MB.  Async: POST the task, then poll /api/v1/tasks/<id>.
+DASHSCOPE_URL = ("https://dashscope.aliyuncs.com/api/v1/services/aigc/"
+                 "image2image/image-synthesis")
+DASHSCOPE_TASK_URL = "https://dashscope.aliyuncs.com/api/v1/tasks/"
+DASHSCOPE_MODEL = "wanx2.1-imageedit"
+DASHSCOPE_FUNCTION = "description_edit_with_mask"
+DASHSCOPE_MIN_SIDE = 512
+DASHSCOPE_MAX_SIDE = 4096
+DASHSCOPE_MAX_BYTES = 9500000
+DASHSCOPE_TIMEOUT = 600
+
+
+def _ark_json():
+    f = os.path.join(SECRET_DIR, "ark.json")
+    if os.path.exists(f):
+        try:
+            return json.load(open(f, encoding="utf-8"))
+        except Exception:
+            return {}
+    return {}
+
+
+def load_ark_key():
+    """Agent Plan key: env first, then data/secrets/ark.json / ark.key."""
+    for env in ("AGENT_API_KEY", "ARK_API_KEY"):
+        key = os.environ.get(env, "").strip()
+        if key:
+            return key
+    key = str(_ark_json().get("api_key") or "").strip()
+    if key:
+        return key
+    f = os.path.join(SECRET_DIR, "ark.key")
+    if os.path.exists(f):
+        key = open(f, encoding="utf-8").read().strip()
+        if key:
+            return key
+    raise RuntimeError("no Volcengine Ark API key: set AGENT_API_KEY or fill "
+                       "data/secrets/ark.json")
 
 
 def load_api_key():

@@ -28,7 +28,8 @@ import numpy as np
 
 from .. import config as C
 from ..config import imread, imwrite
-from ..prompts import ATLAS_PROMPT, BG_PROMPT, NEG_PROMPT
+from ..prompts import ATLAS_PROMPT, ATLAS_PROMPT_SINGLE, BG_PROMPT, NEG_PROMPT
+from ..providers import InpaintProvider, get_provider
 from .base import PipelineStep
 from .layer_build import boxof
 
@@ -341,28 +342,108 @@ def collect_atlas_items(todo, masks, holes, work, plate, W, H, prefill=True):
     return items
 
 
-def repair_image_gen(todo, masks, holes, work, plate, W, H, cfg, T_fn=None):
-    """Article 2.3.1: pack -> image model -> sanity gate -> paste back."""
-    prompt = cfg.atlas_prompt or ATLAS_PROMPT
+def _prov_fill(prov, img, mask, prompt, dump=None, rec=None, T_fn=None, seed=None, depth=0):
+    """One provider call, split along the long axis when the size window rejects it.
+
+    Providers with an output-size contract answer ``ask_size(w, h)`` with None when the
+    geometry cannot be sent (Seedream: total pixels >= 3.6864 M *and* long side <= 2800,
+    so a very wide strip is unsendable).  The image is then halved along its long axis,
+    each half is repaired on its own and the two answers are cross-faded over a 64 px
+    overlap.  Halves without a single hole pixel are copied, never billed.  Safety net
+    only: for the shipped example every atlas and the background fit in one call.
+    """
+    h, w = img.shape[:2]
+    if prov.ask_size(w, h) is not None or depth >= 4:
+        return prov.fill(img, mask, prompt, dump=dump, rec=rec, seed=seed)
+    T_fn and T_fn(f"      {prov.name}: {w}x{h} outside the provider size window -> split")
+    ov = max(8, min(64, min(w, h) // 8))
+    if w >= h:
+        cut = w // 2
+        a, b = max(0, cut - ov), min(w, cut + ov)
+        boxes = [(0, 0, b, h), (a, 0, w, h)]
+    else:
+        cut = h // 2
+        a, b = max(0, cut - ov), min(h, cut + ov)
+        boxes = [(0, 0, w, b), (0, a, w, h)]
+    res = []
+    for xa, ya, xb, yb in boxes:
+        sub = img[ya:yb, xa:xb]
+        sm = mask[ya:yb, xa:xb] if mask is not None else None
+        if sm is not None and not bool(np.any(sm)):
+            res.append(sub.copy())
+            continue
+        r = _prov_fill(prov, sub, sm, prompt, dump, rec, T_fn, seed, depth + 1)
+        res.append(sub.copy() if r is None else r)
+    out = img.copy()
+    ramp = np.linspace(0.0, 1.0, max(1, b - a), dtype=np.float32)
+    if w >= h:
+        out[:, :a] = res[0][:, :a]
+        out[:, b:] = res[1][:, b - a:]
+        out[:, a:b] = (res[0][:, a:b] * (1.0 - ramp)[None, :, None]
+                       + res[1][:, :b - a] * ramp[None, :, None]).astype(np.uint8)
+    else:
+        out[:a, :] = res[0][:a, :]
+        out[b:, :] = res[1][b - a:, :]
+        out[a:b, :] = (res[0][a:b, :] * (1.0 - ramp)[:, None, None]
+                       + res[1][:b - a, :] * ramp[:, None, None]).astype(np.uint8)
+    return out
+
+
+def repair_image_gen(todo, masks, holes, work, plate, W, H, cfg, T_fn=None, rec=None):
+    """Article 2.3.1: pack -> image model -> sanity gate -> paste back.
+
+    The model is pluggable (``--gen-backend``).  Mask-native providers (local Flux,
+    wanx2.1-imageedit) get the packed atlas plus its binary hole mask; mask-less ones
+    (Seedream) get the same atlas with the holes painted pure black -- exactly the
+    article's wording -- plus a 0-999 <bbox> token, and no mask image at all.
+    """
+    prov = get_provider(cfg.gen_backend, cfg, T_fn)
+    model = str(getattr(prov, "model", "") or "")
+    prompt = cfg.atlas_prompt or (ATLAS_PROMPT if prov.supports_mask else ATLAS_PROMPT_SINGLE)
+    seeds = C.GEN_SEEDS if prov.supports_mask else (C.GEN_SEEDS[0],)
     items = collect_atlas_items(todo, masks, holes, work, plate, W, H,
                                 prefill=bool(cfg.atlas_prefill))
-    log, done, atlases = [], set(), []
+    log, done, settled, atlases = [], set(), set(), []
+    head = dict(provider=prov.name, model=model, mask_sent=bool(prov.supports_mask),
+                prompt_chars=len(prompt), seeds=list(seeds))
     if not items:
-        return work, log, done, dict(atlases=0, items=0, accepted=0, rejected=0)
+        return work, log, done, settled, dict(atlases=0, items=0, accepted=0,
+                                              rejected=0, **head)
     budget = int(cfg.atlas_max_side * cfg.atlas_max_side * C.ATLAS_FILL_BUDGET)
     chunks = _chunk(items, budget)
+    dbg = os.path.join(cfg.dest, "_debug_atlas")
     accepted = rejected = 0
     for ci, chunk in enumerate(chunks, start=1):
         atlas, amask, cells = pack_atlas(chunk, cfg.atlas_max_side)
         hole_mask = amask > 0
-        key = hashlib.md5(enc_png(atlas) + enc_png(amask)
-                          + prompt.encode("utf-8") + cfg.ckpt.encode("utf-8")).hexdigest()[:16]
-        T_fn and T_fn(f"2.3.1 atlas {ci}/{len(chunks)}: {len(chunk)} element(s) "
-                      f"{atlas.shape[1]}x{atlas.shape[0]} hole={hole_mask.mean():.1%} key={key}")
+        # one region hint per packed cell: without them a mask-less model tends to
+        # fill the big frame hole and silently keep the small silhouette holes black
+        # hole boxes in ATLAS coordinates: the <bbox> tokens address the sent image,
+        # not the individual cell crops
+        regions = []
+        for c in cells:
+            cm = amask[c["y"]:c["y"] + c["h"], c["x"]:c["x"] + c["w"]] > 0
+            if not cm.any():
+                continue
+            ys, xs = np.where(cm)
+            regions.append((c["x"] + int(xs.min()), c["y"] + int(ys.min()),
+                            c["x"] + int(xs.max()) + 1, c["y"] + int(ys.max()) + 1))
+        pprompt = prov.prompt_with_regions(prompt, regions, shape=atlas.shape[:2])
+        # what actually goes to the model: the packed atlas, or the same atlas with
+        # every hole painted pure black when the provider has no mask channel
+        send = atlas if prov.supports_mask else InpaintProvider.black_hole(atlas, hole_mask)
+        tag = (prov.name + model).encode("utf-8")
+        key = hashlib.md5(enc_png(send) + enc_png(amask) + pprompt.encode("utf-8")
+                          + tag + cfg.ckpt.encode("utf-8")).hexdigest()[:16]
+        imwrite(os.path.join(dbg, f"atlas_{key}_sent.png"), send)
+        imwrite(os.path.join(dbg, f"atlas_{key}_mask.png"), amask)
+        T_fn and T_fn(f"2.3.1 atlas {ci}/{len(chunks)} [{prov.name}{('/' + model) if model else ''}]: "
+                      f"{len(chunk)} element(s) {atlas.shape[1]}x{atlas.shape[0]} "
+                      f"hole={hole_mask.mean():.1%} key={key}")
         result = None
         tries = []
-        for seed in C.GEN_SEEDS:
-            ckey = f"atlas_{key}_{seed}"
+        for seed in seeds:
+            ckey = f"atlas_{key}_{prov.name}_{seed}"
             cpath = os.path.join(cfg.cache, ckey + ".png") if cfg.cache else None
             t0 = time.time()
             try:
@@ -371,10 +452,12 @@ def repair_image_gen(todo, masks, holes, work, plate, W, H, cfg, T_fn=None):
                     src = "cache"
                     dt = time.time() - t0
                 else:
-                    wf = inpaint_workflow(atlas, amask, cfg.ckpt, prompt, NEG_PROMPT, seed,
-                                          "ui_atlas_v6", cfg.base)
-                    out = fetch(comfy_run(wf, cfg.base), cfg.base)
-                    src = "flux"
+                    out = _prov_fill(prov, send, hole_mask, pprompt, rec=rec, T_fn=T_fn,
+                                     seed=seed, dump=os.path.join(
+                                         dbg, f"atlas_{key}_{prov.name}_seed{seed}.png"))
+                    if out is None:
+                        raise RuntimeError(f"{prov.name} returned no image")
+                    src = prov.name
                     dt = time.time() - t0
                     if out.shape[:2] != atlas.shape[:2]:
                         out = cv2.resize(out, (atlas.shape[1], atlas.shape[0]),
@@ -395,7 +478,7 @@ def repair_image_gen(todo, masks, holes, work, plate, W, H, cfg, T_fn=None):
             except Exception as e:
                 tries.append(dict(seed=seed, error=str(e)[:200]))
                 T_fn and T_fn(f"      !! atlas gen failed: {str(e)[:160]}")
-                break                       # ComfyUI down -> do not burn the other seeds
+                break                       # provider down -> do not burn the other seeds
         atlases.append(dict(index=ci, key=key, elements=[c["id"] for c in cells],
                             size=[int(atlas.shape[1]), int(atlas.shape[0])],
                             scale=cells[0].get("scale", 1.0),
@@ -409,22 +492,37 @@ def repair_image_gen(todo, masks, holes, work, plate, W, H, cfg, T_fn=None):
                 cell = cv2.resize(cell, (c["ow"], c["oh"]), interpolation=cv2.INTER_LANCZOS4)
             x0, y0, x1, y1 = it["box"]
             hm = it["mask"]
+            settled.add(it["id"])
+            cblk = float((cell.max(axis=2) < 8)[hm].mean()) if hm.any() else 0.0
+            if cblk > cfg.atlas_max_black:
+                # the model kept (part of) this hole black -> traditional fill, so an
+                # exported layer can never carry a black gap (salvage, no extra call)
+                npx, med = _ns_fill_region(work, plate, masks[it["id"]], holes[it["id"]],
+                                           W, H)
+                log.append(dict(id=it["id"], mode="image", method="ns-cellfallback",
+                                hole_px=npx, fill=med, atlas=key,
+                                cell_black=round(cblk, 4)))
+                continue
             reg = work[y0:y1, x0:x1]
             reg[hm] = cell[hm]
             done.add(it["id"])
-            log.append(dict(id=it["id"], mode="image", method="flux-atlas",
+            log.append(dict(id=it["id"], mode="image", method=f"{prov.name}-atlas",
                             hole_px=it["hole_px"], atlas=key, atlas_cell=[c["x"], c["y"],
                             c["w"], c["h"]], scale=c.get("scale", 1.0),
+                            cell_black=round(cblk, 4),
                             black_ratio=tries[-1].get("black_ratio") if tries else None))
     report = dict(atlases=len(atlases), items=len(items), accepted=accepted,
-                  rejected=rejected, detail=atlases)
+                  rejected=rejected, detail=atlases,
+                  cell_fallback=sorted(settled - done), **head)
     if T_fn:
         T_fn(f"2.3.1 generative repair: {len(done)}/{len(items)} element(s) via "
-             f"{len(atlases)} atlas(es)")
-    return work, log, done, report
+             f"{len(atlases)} atlas(es), provider={prov.name}"
+             + (f", {len(report['cell_fallback'])} cell(s) salvaged by NS"
+                if report["cell_fallback"] else ""))
+    return work, log, done, settled, report
 
 
-def repair_elements(plan_export, masks, holes, work, plate, W, H, cfg, T_fn=None):
+def repair_elements(plan_export, masks, holes, work, plate, W, H, cfg, T_fn=None, rec=None):
     """2.3.1 + 2.3.2 for every extracted element, following the LLM decision.
 
     Everything runs in ONE z_order-ascending pass (parents before children).  A
@@ -460,6 +558,7 @@ def repair_elements(plan_export, masks, holes, work, plate, W, H, cfg, T_fn=None
                 group_of[a["id"]] = gi
 
     gen_done, done_groups, n_surf = set(), set(), 0
+    settled = set()          # ids the group already handled (gen or cell salvage)
     for a in sorted(plan_export, key=lambda a: (a["z_order"], a["id"])):
         i = a["id"]
         if i in surf:
@@ -474,13 +573,14 @@ def repair_elements(plan_export, masks, holes, work, plate, W, H, cfg, T_fn=None
             gi = group_of[i]
             if gi not in done_groups:
                 done_groups.add(gi)
-                work, glog, done, grep = repair_image_gen(
-                    groups[gi], masks, holes, work, plate, W, H, cfg, T_fn)
+                work, glog, gdone, gsettled, grep = repair_image_gen(
+                    groups[gi], masks, holes, work, plate, W, H, cfg, T_fn, rec=rec)
                 log += glog
-                gen_done |= done
+                gen_done |= gdone
+                settled |= gsettled
                 report["atlases"] += grep.get("detail", [])
                 report["atlas_summary"] = {k: v for k, v in grep.items() if k != "detail"}
-            if i in gen_done:
+            if i in settled:
                 continue
         npx, med = _ns_fill_region(work, plate, masks[i], holes[i], W, H)
         log.append(dict(id=i, mode="image",
@@ -507,7 +607,7 @@ def make_bg_holes(plate, allmask, soft=C.BG_SCENE_SOFT_EDGE, blend=C.BG_SCENE_SO
     return out
 
 
-def repair_background(allmask, plate, H, W, bg_repair, cfg, T_fn=None):
+def repair_background(allmask, plate, H, W, bg_repair, cfg, T_fn=None, rec=None):
     bgholes = make_bg_holes(plate, allmask)
     bgmode = (bg_repair or {}).get("mode", "none")
     want_gen = cfg.bg == "gen" or (cfg.bg == "auto" and bgmode == "scene")
@@ -522,46 +622,58 @@ def repair_background(allmask, plate, H, W, bg_repair, cfg, T_fn=None):
 
     bg = None
     if want_gen:
+        prov = get_provider(cfg.gen_backend, cfg, T_fn)
+        model = str(getattr(prov, "model", "") or "")
         prompt = cfg.bg_prompt or BG_PROMPT
-        sc = 1024.0 / max(H, W)
-        sw, sh = int(round(W * sc / 16)) * 16, int(round(H * sc / 16)) * 16
-        small = cv2.resize(bgholes, (sw, sh), interpolation=cv2.INTER_AREA)
-        sm = cv2.resize(allmask.astype(np.uint8) * 255, (sw, sh),
-                        interpolation=cv2.INTER_NEAREST)
-        hole_s = sm > 0
-        key = hashlib.md5(enc_png(small) + enc_png(sm) + prompt.encode("utf-8")
+        seeds = C.GEN_SEEDS if prov.supports_mask else (C.GEN_SEEDS[0],)
+        # full native resolution: the provider scales internally when it must, and a
+        # 1024 px round trip only blurs the scene the plate is judged against
+        send = bgholes if prov.supports_mask else InpaintProvider.black_hole(bgholes, allmask)
+        dbg = os.path.join(cfg.dest, "_debug_bg")
+        imwrite(os.path.join(dbg, "holes_sent.png"), send)
+        imwrite(os.path.join(dbg, "allmask.png"), allmask.astype(np.uint8) * 255)
+        tag = (prov.name + model).encode("utf-8")
+        key = hashlib.md5(enc_png(send) + prompt.encode("utf-8") + tag
                           + cfg.ckpt.encode("utf-8")).hexdigest()[:16]
-        for seed in C.GEN_SEEDS:
-            cpath = os.path.join(cfg.cache, f"bg_{key}_{seed}.png") if cfg.cache else None
+        if T_fn:
+            T_fn(f"      provider={prov.name}{('/' + model) if model else ''} "
+                 f"mask={'yes' if prov.supports_mask else 'no (black holes)'} "
+                 f"{W}x{H} key={key}")
+        for seed in seeds:
+            cpath = os.path.join(cfg.cache, f"bg_{key}_{prov.name}_{seed}.png") if cfg.cache else None
             t0 = time.time()
             try:
                 if cpath and os.path.exists(cpath) and not cfg.refresh:
-                    bg_small, src = imread(cpath), "cache"
+                    out, src = imread(cpath), "cache"
                     dt = time.time() - t0
                 else:
-                    wf = inpaint_workflow(small, sm, cfg.ckpt, prompt, NEG_PROMPT, seed,
-                                          "ui_bg_v6", cfg.base)
-                    bg_small = fetch(comfy_run(wf, cfg.base), cfg.base)
-                    src, dt = "flux", time.time() - t0
-                    if bg_small.shape[:2] != (sh, sw):
-                        bg_small = cv2.resize(bg_small, (sw, sh),
-                                              interpolation=cv2.INTER_LANCZOS4)
+                    out = _prov_fill(prov, send, allmask, prompt, rec=rec, T_fn=T_fn,
+                                     seed=seed, dump=os.path.join(
+                                         dbg, f"bg_{prov.name}_seed{seed}.png"))
+                    if out is None:
+                        raise RuntimeError(f"{prov.name} returned no image")
+                    src, dt = prov.name, time.time() - t0
+                    if out.shape[:2] != (H, W):
+                        out = cv2.resize(out, (W, H), interpolation=cv2.INTER_LANCZOS4)
                     if cpath:
-                        imwrite(cpath, bg_small)
-                ok, blk, std, delta = _sanity_ok(bg_small, hole_s, cfg.bg_max_black,
+                        imwrite(cpath, out)
+                ok, blk, std, delta = _sanity_ok(out, allmask, cfg.bg_max_black,
                                                  strict=True)
                 sanity.append(dict(seed=seed, source=src, seconds=round(dt, 1),
+                                   provider=prov.name, model=model,
+                                   size=[W, H],
                                    black_ratio=round(blk, 4), hole_std=round(std, 2),
                                    material_delta=round(delta, 1), accepted=bool(ok)))
                 if T_fn:
                     T_fn(f"      seed={seed} {src} {dt:.1f}s black={blk:.2%} "
                          f"std={std:.1f} delta={delta:.0f} {'ok' if ok else 'REJECT'}")
                 if ok:
-                    bg = cv2.resize(bg_small, (W, H), interpolation=cv2.INTER_LANCZOS4)
+                    bg = out.copy()
                     bg[~allmask] = plate[~allmask]
-                    return bg, bgholes, f"flux-scene:{src}", sanity
+                    imwrite(os.path.join(dbg, "fused.png"), bg)
+                    return bg, bgholes, f"{prov.name}-scene:{src}", sanity
             except Exception as e:
-                sanity.append(dict(seed=seed, error=str(e)[:200]))
+                sanity.append(dict(seed=seed, provider=prov.name, error=str(e)[:200]))
                 if T_fn:
                     T_fn(f"      !! background gen failed: {str(e)[:160]}")
                 break
@@ -578,36 +690,52 @@ class RepairStep(PipelineStep):
     def run(self, ctx):
         cfg = ctx.config
         dest = cfg.dest
+        rec = []                      # one record per generative provider call
         ctx.work, ctx.repair_log, report = repair_elements(
             ctx.plan_export, ctx.masks, ctx.holes, ctx.plate.copy(), ctx.plate,
-            ctx.W, ctx.H, cfg, T_fn=ctx.log)
+            ctx.W, ctx.H, cfg, T_fn=ctx.log, rec=rec)
         ctx.atlas_report = report
         imwrite(os.path.join(dest, "01b_elements_repaired.png"), ctx.work)
         with open(os.path.join(dest, "repair_log.json"), "w", encoding="utf-8") as f:
             json.dump(ctx.repair_log, f, ensure_ascii=False, indent=1, default=str)
 
         ctx.bg, ctx.bgholes, ctx.bg_method, ctx.bg_sanity = repair_background(
-            ctx.allmask, ctx.plate, ctx.H, ctx.W, ctx.bg_repair, cfg, T_fn=ctx.log)
+            ctx.allmask, ctx.plate, ctx.H, ctx.W, ctx.bg_repair, cfg, T_fn=ctx.log,
+            rec=rec)
+        ctx.model_calls = rec
+        paid = [r for r in rec if r.get("kind") != "cache"]
+        ctx.log(f"2.3 generative provider calls: {len(paid)} "
+                f"({', '.join(sorted({str(r.get('kind')) for r in paid})) or '-'})")
         imwrite(os.path.join(dest, "02_background_holes.png"), ctx.bgholes)
         imwrite(os.path.join(dest, "02_background_plate.png"), ctx.bg)
 
+        summ = report.get("atlas_summary") or {}
+        pname = summ.get("provider") or cfg.gen_backend
         n_surf = sum(1 for r in ctx.repair_log if r["mode"] == "surface")
-        n_gen = sum(1 for r in ctx.repair_log if r.get("method") == "flux-atlas")
+        n_gen = sum(1 for r in ctx.repair_log
+                    if str(r.get("method", "")).endswith("-atlas"))
         n_ns = sum(1 for r in ctx.repair_log if r["mode"] == "image"
-                   and r.get("method") != "flux-atlas")
+                   and not str(r.get("method", "")).endswith("-atlas"))
         ctx.note("2.3.1 Image-model repair", "done" if report["candidates"] else "nothing-to-do",
-                 f"policy={cfg.repair}; candidates={report['candidates']}; "
-                 f"flux-atlas={n_gen} via {len(report.get('atlases', []))} atlas(es); "
-                 f"traditional fallback={n_ns}; prompt={len(cfg.atlas_prompt or ATLAS_PROMPT)} "
-                 f"chars (article 2.3.1); hole prefill={'median' if cfg.atlas_prefill else 'black'}; "
+                 f"policy={cfg.repair}; provider={pname}/{summ.get('model') or '-'}; "
+                 f"candidates={report['candidates']}; "
+                 f"{pname}-atlas={n_gen} via {len(report.get('atlases', []))} atlas(es); "
+                 f"traditional fallback={n_ns}; prompt={summ.get('prompt_chars', 0)} chars "
+                 f"(article 2.3.1{'' if summ.get('mask_sent', True) else ', single-image rewrite'}); "
+                 f"mask_sent={summ.get('mask_sent')}; "
+                 f"hole prefill={'median' if cfg.atlas_prefill else 'black'}; "
                  f"sanity black<={cfg.atlas_max_black:.0%} or "
                  f"(hole_std>={C.GEN_MIN_STD} and material_delta<={C.ATLAS_MAX_COLOR_DELTA}); "
-                 f"seeds={list(C.GEN_SEEDS)}; cache={os.path.basename(cfg.cache or '-')}")
+                 f"seeds={summ.get('seeds') or list(C.GEN_SEEDS)}; "
+                 f"cell_fallback={len(summ.get('cell_fallback') or [])}; "
+                 f"calls={len(ctx.model_calls or [])}; "
+                 f"cache={os.path.basename(cfg.cache or '-')}")
         ctx.note("2.3.2 Traditional repair", "done" if n_surf else "nothing-to-do",
                  f"{n_surf} surface element(s) filled from measured neighbour pixels "
                  f"(core median / 2-cluster majority) + {C.SURFACE_SEAM_KERNEL} seam blend")
         ctx.note("2.3.3 Background repair", "done",
                  f"mode={ctx.bg_repair.get('mode')} -> method={ctx.bg_method}; "
+                 f"provider={pname}; native_resolution={ctx.W}x{ctx.H}; "
                  f"prompt={'case override' if cfg.bg_prompt else 'article 2.3.3'}; "
                  f"hole={float(ctx.allmask.mean()):.1%}; black gate<={cfg.bg_max_black:.0%}; "
                  f"tries={len(ctx.bg_sanity)}")

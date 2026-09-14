@@ -25,6 +25,7 @@ class RunConfig:
     atlas_max_black: float = BG_MAX_BLACK
     atlas_max_side: int = ATLAS_MAX_SIDE
     atlas_prefill: bool = True   # seed element holes with measured material
+    gen_backend: str = "seedream"  # ISS-035: seedream | flux | dashscope
     cc_keep_ratio: float = CC_KEEP_AREA_RATIO
     bg_estimate: str = "median"     # "median" (article) | "kmeans" (repo extension)
     fg_core_filter: bool = True     # repo extension, see 2.1.3
@@ -110,6 +111,7 @@ class PipelineContext:
     bg_method = None
     bg_sanity = None
     atlas_report = None
+    model_calls = None       # one record per generative provider call (audit.json)
 
     # ---------- 2.4 export ----------
     manifest = None

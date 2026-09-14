@@ -35,6 +35,9 @@ def parse_args():
                     help="auto = follow the LLM element_repair_mode (article default)")
     ap.add_argument("--bg", choices=["auto", "ns", "gen"], default="auto",
                     help="auto = follow background_repair.mode")
+    ap.add_argument("--gen-backend", choices=["seedream", "flux", "dashscope"],
+                    default=C.GEN_PROVIDER_DEFAULT,
+                    help="ISS-035 generative inpainting provider (default seedream pro)")
     ap.add_argument("--gen", action="store_true", help="shortcut for --repair gen --bg gen")
     ap.add_argument("--ns", action="store_true", help="shortcut for --repair ns --bg ns")
     ap.add_argument("--refresh", action="store_true", help="ignore the inpaint cache")
@@ -85,7 +88,7 @@ def parse_args():
         cc_keep_ratio=a.cc_keep_ratio, safe_area_height=int(safe or 0),
         dropped_ids=frozenset(dropped), llm_model=a.model, api_key=api_key,
         bg_prompt=case.get("bg_prompt") or "", atlas_prompt=case.get("atlas_prompt") or "",
-        atlas_prefill=not a.no_atlas_prefill,
+        atlas_prefill=not a.no_atlas_prefill, gen_backend=a.gen_backend,
         plan_path=a.plan, truth_bbox=case.get("truth_bbox") or {}, case_config=case)
 
 

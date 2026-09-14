@@ -103,6 +103,36 @@ ATLAS_PROMPT = (
     "Output a complete image with exactly the same dimensions as the input."
 )
 
+# --------------------------------------- 2.3.1 for mask-less providers (ISS-035)
+# The article's atlas prompt addresses a (image, mask) pair.  Seedream has no mask
+# parameter, so the hole is painted black and this single-image rewrite keeps every
+# constraint of the original ("black = missing", "no text/icons", "non-black unchanged",
+# "same size") while pointing at the region with a 0-999 <bbox> token.
+ATLAS_PROMPT_SINGLE = (
+    "Image inpainting task. The image contains pure-black regions; they represent "
+    "missing content, not black artwork.\n"
+    "All black regions must be inpainted, while everything else must remain unchanged. "
+    "This includes small silhouette-shaped black regions (animals, leaves, icons, "
+    "badges): every one of them is a gap, none may stay black. "
+    "The repaired content must seamlessly continue the surrounding background material "
+    "of the same element.\n"
+    "The black regions are not black content to preserve, nor are they text to be redrawn.\n"
+    "Repair only the black regions in the image. Do not introduce any text, numbers, "
+    "letters, icons, buttons, characters, objects, logos, lighting effects, or additional "
+    "UI elements.\n"
+    "Use only the immediately adjacent background of the same element as reference. Fill "
+    "the missing regions with continuous colors, gradients, translucent materials, and "
+    "textures. Do not reference other elements.\n"
+    "All non-black content, element positions, dimensions, shapes, outer contours, "
+    "boundaries, gray spacing, and the overall layout must remain completely unchanged.\n"
+    "Even if a black region has the shape of text, an animal, a plant, a vessel or any "
+    "other figure, treat it solely as a gap in the parent layer's background: fill it "
+    "with that parent's own plain material (its paper colour, gradient or texture). Do "
+    "not restore the figure inside the black region, not even as a faint outline, "
+    "sketch, watermark or colour echo.\n"
+    "Output a complete image with exactly the same dimensions as the input."
+)
+
 # --------------------------------------------------------- 2.3.3 background repair
 BG_PROMPT = (
     "Fill the black missing region in this image so the surrounding scene continues naturally.\n"

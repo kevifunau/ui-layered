@@ -8,7 +8,7 @@ from .context import PipelineContext, RunConfig
 from .llm_planner import (build_ocr_block, convert_coords, corrections_to_boxes,
                           expand_instances, family_of, generate_llm_plan, load_plan,
                           resolve_plan)
-from .prompts import ATLAS_PROMPT, BG_PROMPT, NEG_PROMPT, PLAN_PROMPT
+from .prompts import ATLAS_PROMPT, ATLAS_PROMPT_SINGLE, BG_PROMPT, NEG_PROMPT, PLAN_PROMPT
 from .steps import (AuditStep, ExportStep, LayerBuildStep, Pipeline, PipelineStep,
                     PlanStep, RepairStep, SegmentationStep, TextExtractStep,
                     TextFinalizeStep)

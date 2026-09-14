@@ -69,8 +69,9 @@ for f in au.get("fidelity") or []:
 
 print("\n== 2.3 element repair ==")
 surf = [r for r in rl if r["mode"] == "surface"]
-gen = [r for r in rl if r.get("method") == "flux-atlas"]
-ns = [r for r in rl if r["mode"] == "image" and r.get("method") != "flux-atlas"]
+gen = [r for r in rl if str(r.get("method", "")).endswith("-atlas")]
+ns = [r for r in rl if r["mode"] == "image"
+      and not str(r.get("method", "")).endswith("-atlas")]
 print(f"   surface traditional fill : {len(surf)}")
 print(f"   image model (atlas)      : {len(gen)}")
 print(f"   image traditional (NS)   : {len(ns)}")
@@ -86,6 +87,14 @@ if rep.get("atlases"):
         print(f"     #{a['index']} {a['size'][0]}x{a['size'][1]} scale={a['scale']} "
               f"hole={a['hole_ratio']:.1%} accepted={a['accepted']} "
               f"elements={len(a['elements'])}")
+calls = au.get("gen_calls") or []
+print(f"   generative provider calls: {len(calls)}"
+      + (f"  [{', '.join(sorted({str(c.get('kind')) for c in calls}))}]" if calls else ""))
+for c in calls:
+    print(f"     {str(c.get('kind')):<9} {str(c.get('model') or c.get('ckpt') or '-'):<26} "
+          f"{c.get('seconds')}s in={c.get('in_size')} ask={c.get('asked', '-')} "
+          f"ret={c.get('returned', '-')} ok={c.get('ok')}"
+          + (f" err={c.get('error')}" if c.get("error") else ""))
 
 print("\n== repeated instance consistency ==")
 g = collections.defaultdict(list)
