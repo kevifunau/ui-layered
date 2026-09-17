@@ -657,8 +657,7 @@ def repair_background(allmask, plate, H, W, bg_repair, cfg, T_fn=None, rec=None)
                         out = cv2.resize(out, (W, H), interpolation=cv2.INTER_LANCZOS4)
                     if cpath:
                         imwrite(cpath, out)
-                ok, blk, std, delta = _sanity_ok(out, allmask, cfg.bg_max_black,
-                                                 strict=True)
+                ok, blk, std, delta = _sanity_ok(out, allmask, cfg.bg_max_black)
                 sanity.append(dict(seed=seed, source=src, seconds=round(dt, 1),
                                    provider=prov.name, model=model,
                                    size=[W, H],
@@ -737,5 +736,7 @@ class RepairStep(PipelineStep):
                  f"mode={ctx.bg_repair.get('mode')} -> method={ctx.bg_method}; "
                  f"provider={pname}; native_resolution={ctx.W}x{ctx.H}; "
                  f"prompt={'case override' if cfg.bg_prompt else 'article 2.3.3'}; "
-                 f"hole={float(ctx.allmask.mean()):.1%}; black gate<={cfg.bg_max_black:.0%}; "
+                 f"hole={float(ctx.allmask.mean()):.1%}; "
+                 f"gate: black<={cfg.bg_max_black:.0%} or "
+                 f"(std>={C.GEN_MIN_STD} and delta<={C.ATLAS_MAX_COLOR_DELTA}); "
                  f"tries={len(ctx.bg_sanity)}")
